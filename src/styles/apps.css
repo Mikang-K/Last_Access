@@ -1,0 +1,36 @@
+.window-body button, .window-body input, .window-body textarea, .window-body select { font: inherit; }
+.window-body button { cursor: pointer; border: 1px solid #a4b6b0; background: #edf1eb; color: #244d48; border-radius: 4px; padding: 7px 11px; }
+.window-body button:hover:not(:disabled) { background: #d8e7df; }
+.window-body button:disabled { cursor: default; opacity: .6; }
+.window-body input, .window-body textarea { border: 1px solid #a4b6b0; background: #fffefa; border-radius: 3px; padding: 9px; color: #233d39; }
+.window-body h1 { font-size: 23px; line-height: 1.5; margin: 5px 0 13px; }
+.window-body h2 { font-size: 19px; }
+.viewer { padding: 26px 30px 32px; }
+.document-heading { border-bottom: 1px solid #cdd7cf; margin-bottom: 23px; }
+.document-heading > span { color: #6f8277; font-size: 11px; letter-spacing: .08em; }
+.document-text { line-height: 1.95; white-space: pre-wrap; overflow-wrap: anywhere; }
+.document-text p { margin: 0 0 19px; }
+.document-table { overflow-x: auto; }
+.document-table table, .file-list { width: 100%; border-collapse: collapse; text-align: left; }
+.document-table th, .document-table td { padding: 12px; border: 1px solid #cad6cc; white-space: pre-wrap; }
+.document-table th { background: #e1e9df; }
+.document-diagram { margin: 0; }
+.document-diagram img { display: block; max-width: 100%; max-height: 460px; margin: auto; }
+.document-diagram figcaption { font-size: 14px; line-height: 1.8; margin-top: 15px; color: #52695e; white-space: pre-wrap; }
+.evidence-actions { display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px solid #d0d9d1; padding-top: 21px; margin-top: 25px; }
+.explorer-toolbar { min-height: 51px; display: flex; align-items: center; gap: 13px; padding: 9px 14px; border-bottom: 1px solid #d2dacf; background: #ecefe7; font-size: 13px; }
+.explorer-toolbar > span { overflow-wrap: anywhere; }
+.file-list { font-size: 14px; }
+.file-list th { padding: 10px 14px; font-size: 12px; font-weight: 400; color: #62766c; border-bottom: 1px solid #d2dacf; }
+.file-list td { padding: 5px 9px; border-bottom: 1px solid #e3e8df; }
+.file-list td:first-child { width: 64%; }
+.file-list td > button { text-align: left; width: 100%; border: 0; background: transparent; padding: 8px 4px; }
+.file-list td > button span { margin-right: 6px; color: #5d8576; }
+.folder-lock { padding: 14px 25px; }
+.puzzle-form { max-width: 380px; margin: 28px auto; padding: 10px; }
+.puzzle-form .lock-symbol { font-size: 42px; color: #567b6b; }
+.puzzle-form p { color: #5d7267; line-height: 1.8; }
+.puzzle-form label { display: flex; flex-direction: column; gap: 8px; margin: 20px 0 12px; }
+.puzzle-form button[type=submit] { background: #315e54; color: #fff; border-color: #315e54; }
+.puzzle-form [role=status] { min-height: 28px; color: #8c483c; font-size: 14px; }
+.unlock-notice { padding: 12px 16px; background: #dcebe0; display: flex; align-items: center; gap: 13px; }

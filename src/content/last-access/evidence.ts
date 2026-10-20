@@ -1,0 +1,3 @@
+﻿import type { Evidence } from '../../game/types';
+const rows=[['E01','conversation','C02','별관의 옛 포스터 보관 장소에서 만나기로 한 약속'],['E02','file','F06','옛 포스터는 별관 지하 1층 자료실에 보관'],['E03','file','F10','18:40 운영실 PC에서 설치비 수정'],['E04','file','F11','실제 작업자는 한도현이라는 목격 기록'],['E05','file','F08','승인 원본의 설치비 800,000원'],['E06','file','F09','제출본의 설치비 1,800,000원'],['E07','file','F07','공용 계정 이름과 실제 작업자는 다를 수 있음'],['E08','file','F13','20:30 메시지는 19:20에 등록한 예약 메시지'],['E09','file','F14','서윤은 19:25에 휴대전화를 끄고 이동']] as const;
+export const evidence:Evidence[]=rows.map(([id,kind,sourceId,title])=>({id,title,source:{kind,id:sourceId},summary:title}));

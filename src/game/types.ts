@@ -1,0 +1,17 @@
+﻿export type Condition = { type: 'always' } | { type: 'puzzleSolved'; puzzleId: string } | { type: 'all'; conditions: Condition[] };
+export type FileContent = { kind: 'text'; paragraphs: string[] } | { kind: 'table'; columns: string[]; rows: string[][] } | { kind: 'diagram'; assetId: string; alt: string };
+export type FileNode = { id: string; name: string; parentId: string | null; kind: 'folder'; access: Condition } | { id: string; name: string; parentId: string; kind: 'file'; access: Condition; content: FileContent; puzzleId?: string; evidenceIds: string[] };
+export type SourceRef = { kind: 'file' | 'conversation' | 'calendar'; id: string };
+export type SourceKey = string;
+export type Evidence = { id: string; title: string; source: SourceRef; summary: string };
+export type HintTargetId = 'P01' | 'P02' | 'final';
+export type Puzzle = { id: string; targetId: string; inputLabel: string; answer: string; normalization: 'date4' | 'asciiCode'; hints: [string, string, string] };
+export type Conversation = { id: string; title: string; messages: { time: string; sender: string; text: string }[] };
+export type CalendarEvent = { id: string; title: string; time: string; location: string; description: string };
+export type Question = { id: string; prompt: string; options: { id: string; label: string }[]; correctAnswerId: string; requiredEvidenceIds: string[] };
+export type CaseContent = { id: string; version: number; referenceTime: string; files: FileNode[]; conversations: Conversation[]; calendar: CalendarEvent[]; puzzles: Puzzle[]; evidence: Evidence[]; questions: Question[]; hints: Record<HintTargetId, [string, string, string]>; assets: Record<string, string> };
+export type GameState = { caseId: string; caseVersion: number; phase: 'investigating' | 'solved'; openedSourceIds: string[]; collectedEvidenceIds: string[]; solvedPuzzleIds: string[]; hintLevels: Record<string, number>; notebookText: string; submissionDraft: Record<string, { answerId: string; evidenceIds: string[] }>; submissionAttempts: number };
+export type SaveEnvelope = { schemaVersion: 1; savedAt: string; game: GameState };
+export type GameAction = { type: 'OPEN_SOURCE'; source: SourceRef } | { type: 'TRY_PUZZLE'; puzzleId: string; input: string } | { type: 'COLLECT_EVIDENCE'; evidenceId: string } | { type: 'UPDATE_NOTEBOOK'; text: string } | { type: 'REVEAL_HINT'; targetId: HintTargetId } | { type: 'UPDATE_SUBMISSION'; questionId: string; answerId: string; evidenceIds: string[] } | { type: 'SUBMIT_SOLUTION' };
+export type SubmissionResult = { status: 'incomplete'; questionId: string } | { status: 'incorrect' } | { status: 'correct' };
+export const NOTEBOOK_LIMIT = 20_000;

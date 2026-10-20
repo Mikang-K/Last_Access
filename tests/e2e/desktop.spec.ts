@@ -1,0 +1,103 @@
+import { expect, test } from '@playwright/test';
+
+test('문서 비교와 창 조작, 본문 선택 및 화면 경계', async ({ page }, testInfo) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '새 게임', exact: true }).click();
+  const first = page.getByRole('region', { name: '먼저 읽어줘.txt', exact: true });
+  await expect(first.getByText('이 컴퓨터는 네가 확인해도 돼.', { exact: false })).toBeVisible();
+  const before = await first.boundingBox();
+  if (!before) throw new Error('첫 문서 창을 찾을 수 없음');
+  const title = first.locator('.window-titlebar');
+  const titleBox = await title.boundingBox();
+  if (!titleBox) throw new Error('제목 표시줄을 찾을 수 없음');
+  await page.mouse.move(titleBox.x + 100, titleBox.y + 18);
+  await page.mouse.down();
+  await page.mouse.move(titleBox.x + 180, titleBox.y + 60);
+  await page.mouse.up();
+  await expect.poll(async () => (await first.boundingBox())?.x).toBe(before.x + 80);
+  const moved = await first.boundingBox();
+  const paragraph = first.locator('.document-text p').first();
+  const paragraphBox = await paragraph.boundingBox();
+  if (!paragraphBox) throw new Error('본문을 찾을 수 없음');
+  await page.mouse.move(paragraphBox.x + 1, paragraphBox.y + 15);
+  await page.mouse.down();
+  await page.mouse.move(paragraphBox.x + 180, paragraphBox.y + 15, { steps: 8 });
+  await page.mouse.up();
+  expect(await page.evaluate(() => window.getSelection()?.toString())).toContain('컴퓨터');
+  expect((await first.boundingBox())?.x).toBe(moved?.x);
+  await first.getByRole('button', { name: '먼저 읽어줘.txt 최대화', exact: true }).click();
+  await expect(first).toHaveCSS('left', '0px');
+  await first.getByRole('button', { name: '먼저 읽어줘.txt 복원', exact: true }).click();
+  await first.getByRole('button', { name: '먼저 읽어줘.txt 최소화', exact: true }).click();
+  await expect(first).toBeHidden();
+  await page.getByRole('navigation', { name: '열린 창' }).getByRole('button', { name: '먼저 읽어줘.txt (최소화)', exact: true }).click();
+  await expect(first).toBeVisible();
+
+  await page.getByRole('navigation', { name: '바탕화면 앱' }).getByRole('button', { name: '파일 탐색기', exact: true }).click();
+  const explorer = page.getByRole('region', { name: '파일 탐색기', exact: true });
+  await explorer.getByRole('button', { name: '사진', exact: false }).click();
+  await explorer.getByRole('button', { name: '첫_전시_포스터.svg', exact: false }).click();
+  const poster = page.getByRole('region', { name: '첫_전시_포스터.svg', exact: true });
+  await expect(poster.getByRole('img')).toBeVisible();
+  await expect(poster.getByText('2024.04.17', { exact: false })).toBeVisible();
+  await expect(first).toBeVisible();
+  const taskbar = page.getByRole('navigation', { name: '열린 창' });
+  for (const [name, region, x] of [['먼저 읽어줘.txt', first, 0], ['첫_전시_포스터.svg', poster, 640]] as const) {
+    await taskbar.getByRole('button', { name, exact: true }).click();
+    const bar = await region.locator('.window-titlebar').boundingBox();
+    if (!bar) throw new Error('비교할 창을 찾을 수 없음');
+    await page.mouse.move(bar.x + 100, bar.y + 18);
+    await page.mouse.down();
+    await page.mouse.move(x + 100, 58);
+    await page.mouse.up();
+  }
+  const firstBody = await first.locator('.window-body').boundingBox();
+  const posterBody = await poster.locator('.window-body').boundingBox();
+  expect(firstBody && posterBody && firstBody.x + firstBody.width <= posterBody.x).toBeTruthy();
+  await poster.locator('.window-body').hover();
+  await page.mouse.wheel(0, 700);
+  await expect.poll(() => poster.locator('.window-body').evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+  await page.screenshot({ path: testInfo.outputPath('document-comparison.png') });
+  await page.setViewportSize({ width: 1280, height: 720 });
+  for (const region of [first, explorer, poster]) {
+    const close = await region.getByRole('button', { name: '닫기', exact: false }).boundingBox();
+    if (!close) throw new Error('닫기 버튼을 찾을 수 없음');
+    expect(close.x).toBeGreaterThanOrEqual(0);
+    expect(close.x + close.width).toBeLessThanOrEqual(1280);
+    expect(close.y + close.height).toBeLessThanOrEqual(676);
+  }
+  await poster.getByRole('button', { name: '첫_전시_포스터.svg 닫기', exact: true }).click();
+  await expect(poster).toHaveCount(0);
+  await expect(first).toBeVisible();
+});
+
+test('드래그 중 화면 축소와 pointercancel 이후 재조작', async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto('/');
+  await page.getByRole('button', { name: '새 게임', exact: true }).click();
+  const documentWindow = page.getByRole('region', { name: '먼저 읽어줘.txt', exact: true });
+  const title = documentWindow.locator('.window-titlebar');
+  const before = await title.boundingBox();
+  if (!before) throw new Error('드래그할 창을 찾을 수 없음');
+  await page.mouse.move(before.x + 90, before.y + 18);
+  await page.mouse.down();
+  await page.mouse.move(1750, 900);
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await title.dispatchEvent('pointercancel', { pointerId: 1 });
+  const cancelled = await documentWindow.boundingBox();
+  await page.mouse.move(400, 150);
+  expect((await documentWindow.boundingBox())?.x).toBe(cancelled?.x);
+  expect((await documentWindow.boundingBox())?.y).toBe(cancelled?.y);
+  await page.mouse.up();
+  const close = await documentWindow.getByRole('button', { name: '먼저 읽어줘.txt 닫기', exact: true }).boundingBox();
+  if (!close) throw new Error('닫기 버튼을 찾을 수 없음');
+  expect(close.x + close.width).toBeLessThanOrEqual(1280);
+  expect(close.y + close.height).toBeLessThanOrEqual(676);
+  const after = await title.boundingBox();
+  if (!after) throw new Error('취소 후 제목 표시줄을 찾을 수 없음');
+  await page.mouse.move(after.x + 90, after.y + 18);
+  await page.mouse.down();
+  await page.mouse.move(200, 90);
+  await page.mouse.up();
+  await expect.poll(async () => (await documentWindow.boundingBox())?.x).not.toBe(cancelled?.x);
+});

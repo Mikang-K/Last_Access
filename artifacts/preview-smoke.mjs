@@ -1,0 +1,38 @@
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+const browser = await chromium.launch();
+try {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  const external = [], failures = [];
+  page.on('request', request => { if (/^https?:/.test(request.url()) && new URL(request.url()).origin !== 'http://127.0.0.1:4173') external.push(request.url()); });
+  page.on('requestfailed', request => failures.push(request.url()));
+  page.on('pageerror', error => failures.push(error.message));
+  await page.goto('http://127.0.0.1:4173');
+  await page.getByRole('button', { name: '새 게임', exact: true }).waitFor();
+  await page.screenshot({ path: 'artifacts/preview-start.png' });
+  await page.getByRole('button', { name: '새 게임', exact: true }).click();
+  await page.getByRole('region', { name: '먼저 읽어줘.txt', exact: true }).getByText('이 컴퓨터는 네가 확인해도 돼.', { exact: false }).waitFor();
+  await page.getByRole('navigation', { name: '바탕화면 앱' }).getByRole('button', { name: '파일 탐색기', exact: true }).click();
+  const explorer = page.getByRole('region', { name: '파일 탐색기', exact: true });
+  await explorer.getByRole('button', { name: '사진', exact: false }).click();
+  await explorer.getByRole('button', { name: '첫_전시_포스터.svg', exact: false }).click();
+  const poster = page.getByRole('region', { name: '첫_전시_포스터.svg', exact: true });
+  await poster.getByRole('img').waitFor();
+  assert(await poster.getByRole('img').evaluate(img => img.complete && img.naturalWidth > 0), 'SVG 표시 실패');
+  await page.screenshot({ path: 'artifacts/preview.png' });
+  await poster.getByRole('button', { name: '첫_전시_포스터.svg 닫기', exact: true }).click();
+  await explorer.getByRole('button', { name: '← 뒤로', exact: true }).click();
+  await explorer.getByRole('button', { name: '전시', exact: false }).click();
+  await explorer.getByRole('button', { name: '백업', exact: false }).click();
+  await explorer.getByRole('textbox').fill('TEAL04');
+  await explorer.getByRole('button', { name: '잠금 해제', exact: true }).click();
+  await explorer.getByRole('button', { name: '백업 폴더 열기', exact: true }).click();
+  await explorer.getByRole('button', { name: '정산_원본.csv', exact: false }).click();
+  const table = page.getByRole('region', { name: '정산_원본.csv', exact: true }).getByRole('table');
+  await table.waitFor();
+  assert((await table.textContent()).includes('800,000'), '승인 원본 금액 누락');
+  await page.screenshot({ path: 'artifacts/preview-table.png' });
+  assert.deepEqual(external, []);
+  assert.deepEqual(failures, []);
+  console.log('preview: 시작·본문·SVG·잠금·표 통과, 외부 요청·실패·페이지 오류 0건');
+} finally { await browser.close(); }
